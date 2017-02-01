@@ -1,0 +1,226 @@
+---
+title: "STA286 Lecture 09"
+author: "Neil Montgomery"
+date: "Last edited: `r format(Sys.time(), '%Y-%m-%d %H:%M')`"
+output: 
+  beamer_presentation:
+    keep_tex: TRUE
+    incremental: TRUE
+    df_print: tibble
+    fig_caption: FALSE
+classoption: aspectratio=169
+header-includes:
+- \renewcommand{\le}{\leqslant}
+- \renewcommand{\ge}{\geqslant}
+- \renewcommand\P[1]{P{\left(#1\right)}}
+- \newcommand\F[1]{F_{\tiny{#1}}}
+- \newcommand\f[1]{f_{\tiny{#1}}}
+- \newcommand\p[1]{p_{\tiny{#1}}}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
+options(tibble.width=70)
+library(tidyverse)
+library(xtable)
+theme_update(axis.title = element_text(size=rel(1.5)), 
+             axis.text = element_text(size=rel(1.5)))
+
+diams <- c("1", "1.5", "1.75")
+psi <- c("0.5", "1", "2")
+Counts <- c(75, 100, 150, 110, 80, 90, 160, 140, 95)
+gas <- data.frame(expand.grid(Diameter=diams, Pressure=psi), Counts=Counts,
+                  check.names = FALSE)
+gas_joint <- prop.table(xtabs(Counts ~ Pressure + Diameter, gas))
+
+addtorow_m <- list()
+addtorow_m$pos <- list(0, 0)
+addtorow_m$command <- c("& \\multicolumn{3}{c|}{$X$} & \\\\\n",
+"$Y$ & 1 & 1.5 & 1.75 & Marginal\\\\\n")
+
+```
+
+## extension to more than two random variables - a few illustrations
+
+The concepts of joint and marginal distributions extend to $n$ random variables at a time. Things get ugly fast. Here is a taste....
+
+\pause Joint pmf of $X_1, X_2, X_3$:
+$$p(x_1, x_2, x_3) = P(X_1=x_1, X_2=x_2, X_3=x_3)$$
+\pause Marginal for $X_2$:
+$$p(x_2) = \sum\limits_{x_1}\sum\limits_{x_3}p(x_1,x_2,x_3)$$
+
+\pause Joint density for $Y_1, Y_2, Y_3$:
+$$P(a_1 < Y_1 < b_1, a_2 < Y_2 < b_2, a_3 < Y_3 < b_3) =
+\int\limits_{a_1}^{b_1}
+\int\limits_{a_2}^{b_2}
+\int\limits_{a_3}^{b_3} f(y_1,y_2,y_3)\,dy_3\,dy_2\,dy_1$$
+
+## extension to more than two random variables - a few illustrations
+
+The marginal density for $X_3$:
+$$\f{X_3}(x_3) = \int\limits_{-\infty}^{\infty}\int\limits_{-\infty}^{\infty}
+f(x_1,x_2,x_3)\,dx_1\,dx_2$$
+
+\pause \textbf{Important}: Random variables $X_1,X_2,\ldots,X_n$ are *independent* if:
+$$f(x_1,x_2,\ldots,x_n) = \f{X_1}(x_1)\f{X_2}(x_2)\ldots\f{X_n}(x_n)$$
+(continuous version with densities...discrete version is similar.)
+
+\pause This is conceptually important as the basis for the mathematical model of the observations in a dataset.
+
+# the expected value operator
+
+## the mean of a distribution
+
+Recall the sample average:
+$$\overline x = \sum\limits_{i=1}^n x_i\cdot\frac{1}{n}$$
+which can be considered as a weighted sum with weights $w_i = 1/n$.
+
+\pause A (discrete) random variable can have an "average", which is a weighted sum of the outcomes with their probabilities as weights. 
+
+\pause BIG MONEY. We play a gambling game called BIG MONEY. Roll a die. This is your outcome after each play of BIG MONEY:
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{rcccc}
+ \hline
+ Roll & 1, 2 & 3 & 4, 5 & 6 \\\hline
+Outcome \$ & -2 & 0 & 1 & 2 \\\hline
+\onslide<4->{Probability & 2/6 & 1/6 & 2/6 & 1/6\\\hline}
+\end{tabular}
+\end{table}
+
+## BIG MONEY is a "fair game"
+
+Your *expected* financial outcome is (theoretically):
+$$-2\frac{2}{6} + 0 \frac{1}{6} + 1\frac{2}{6} + 2\frac{1}{6} = 0$$
+
+\pause The *expected value* of a discrete random variable $X$ is:
+$$E(X) = \sum\limits_x xp(x)$$
+if the sum exists (actually it has to converge absolutely.)
+
+## expected number of coin tosses to first `H`
+
+Denote by $X$ the number of coin tosses until the first `H`. The pmf is (new version!):
+$$p(x) = \left(1-\frac{1}{2}\right)^{x-1}\frac{1}{2}$$
+for $x \in \{1,2,3,\ldots\}$. For a moment replace $\frac{1}{2}$ with $p$.
+
+\begin{align*}
+\onslide<2->{E(X) &= \sum\limits_{x=1}^\infty x(1-p)^{x-1}p \\}
+\onslide<3->{ &= p\sum\limits_{x=0}^\infty x(1-p)^{x-1}\\}
+\onslide<4->{ &= p\sum\limits_{x=0}^\infty \frac{d}{dp} (1-p)^{x}\\}
+\onslide<5->{ &= p\frac{d}{dp}\left(\sum\limits_{x=0}^\infty  (1-p)^{x}\right)
+=p\frac{d}{dp}\left(\frac{1}{1-(1-p)}\right) = \frac{1}{p}\\}
+\end{align*}
+
+
+## generalization of "tosses to first head"
+
+A factory makes a defective item with probability $p$ (per item) with $0 < p < 1$. What is the expected number of items until the first defective item?
+
+Denote the number of items by $X$. The pmf of $X$ will be:
+$$p(x) = \left(1-p\right)^{x-1}p$$
+for $x \in \{1,2,3,\ldots\}$.
+
+\pause According to the previous slide, $E(X) = \frac{1}{p}$
+
+## graphical view of expected value 
+
+Suppose $p=0.05$. Then $E(X)=20$. The expected value is the "physical" balance point of the pmf (a.k.a. the *first moment*)
+
+```{r, fig.height=4}
+big_money <- data_frame(Items=1:100, Probability=dgeom(0:99, 0.05))
+
+big_money %>% 
+  ggplot(aes(x=Items, y=Probability)) + 
+  geom_segment(aes(x=Items, y=rep(0,100), xend=Items, yend=Probability)) + 
+  geom_vline(xintercept = 1/0.05, color="red")
+```
+
+
+
+## expected value non-example
+
+Let $X$ have the following pmf (!):
+$$p(x) = \frac{6}{\pi^2x^2}, x \in \{1,2,3,\ldots\}$$
+
+$X$ does not have an expected value, because $\sum_x xp(x)$ does not converge.
+
+## expected value - continuous version
+
+If $X$ is continuous with density $f$, its expected value is:
+
+$$E(X) = \int\limits_{-\infty}^{\infty} xf(x)\,dx$$
+provided the integral converges (absolutely).
+
+\pause Bus stop example. What is the expected waiting time?
+
+\pause
+$$\int\limits_0^{10} x\frac{1}{10}\,dx = \left. x^2\frac{1}{20}\right|_{x=0}^{10}=5$$
+
+## another continuous example; plus a non-example
+
+Consider $f(x) = 2x^{-3}$ for $x > 1$, and 0 otherwise. This is a valid density.
+
+\pause Suppose $X$ has density $f(x)$. Then:
+
+$$E(X) = \int\limits_1^\infty x\,2x^{-3}\,dy 
+\onslide<3->{= \left[-2x^{-1}\right]_{x=1}^\infty}
+\onslide<4->{= 2} $$
+
+\pause \pause \pause But suppose $Y$ has density $f(y) = y^{-2}$ on $y > 1$, and 0 otherwise. Then:
+$$ \int\limits_1^\infty y\,y^{-2}\,dy 
+\onslide<5->{= \left[\log{y}\right]_{y=1}^\infty}$$
+so $E(Y)$ does not exist.
+
+## expected values of functions of random variables
+
+Denote by $X$ your outcome after a play of BIG MONEY. Then...
+
+\pause BIG MONEY---*after a few schnapps version*. 
+
+\pause We adopt fake German accents and up the game.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{rcccc}
+ \hline
+ Roll & 1, 2 & 3 & 4, 5 & 6 \\\hline
+Outcome \$ & -200 & 0 & 100 & 200 \\\hline
+Probability & 2/6 & 1/6 & 2/6 & 1/6\\\hline
+\end{tabular}
+\end{table}
+
+\pause Denote by $Y$ your outcome after a play of this modified game. $E(Y)$ is also zero, using the definition:
+$$E(Y) = -200\frac{2}{6} + 0 \frac{1}{6} + 100\frac{2}{6} + 200\frac{1}{6} = 0$$
+
+## expected values of functions of random variables
+
+The definition requires determining the pmf/pdf of the new random variable, which is not always so easy.
+
+\pause Theorem: For a random variable $X$ and a function $g:\mathbb{R}\to\mathbb{R}$:
+$$E(g(X)) = \sum\limits_x g(x)p(x) \qquad \text{discrete} \qquad 
+E(g(X)) = \int\limits_{\infty}^\infty g(x)f(x)\,dx \qquad \text{continuous}$$
+
+\pause For example, the outcome $Y$ of BIG MONEY (SCHNAPPS VERSION) is related the the outcome $X$ of BIG MONEY by:
+$$Y = 100X$$
+So the theorem says $E(Y)=E(100X)$ and the calculation is (technically):
+
+$$E(Y) = 100\cdot(-2)\frac{2}{6} + 100\cdot(0) \frac{1}{6} + 100\cdot(1)\frac{2}{6} + 100\cdot(2)\frac{1}{6} = 0$$
+
+## $E(\cdot)$ rules
+
+The theorem lets us develop some basic rules.
+
+\begin{align*}
+E(a + bX) &= \sum\limits_x (a + bx)p(x)\\
+\onslide<1->{&= \sum\limits_x ap(x) + \sum\limits_x bxp(x)\\}
+\onslide<2->{&= a\sum\limits_x p(x) + b\sum\limits_x xp(x)\\}
+\onslide<3->{&= a + bE(X)\\}
+\end{align*}
+
+\pause \pause \pause Continuous version is the same.
+
+
+
+
+
